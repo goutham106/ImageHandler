@@ -32,9 +32,11 @@ public class AppConfig extends Application {
          * The initTempFilePath() is used to save the contents by the user mentioned folder in the given path
          * if SD card is not available that contents should be stored in app catch folder.
          */
-        ImageHandler.getInstance(context).initTempFilePath(path);
+        ImageHandler.getInstance(this).initTempFilePath(path);
 
-        ImageHandler.getInstance(context).initBitmapConfig(Bitmap.CompressFormat.PNG,60);
+        ImageHandler.getInstance(this).initBitmapConfig(Bitmap.CompressFormat.PNG, 60);
+
+
 
     }
 }

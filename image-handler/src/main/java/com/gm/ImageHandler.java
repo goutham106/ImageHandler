@@ -1,7 +1,12 @@
 package com.gm;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,6 +15,11 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -29,16 +39,19 @@ import java.util.Date;
 /**
  * Created by gowtham on 14/10/15.
  */
-public class ImageHandler {
+public class ImageHandler extends AppCompatActivity {
+
 
     public String TAG = "ImagePicker";
     // private String filePath = "/ImagePicker";// "/Files";
     private static ImageHandler ImagePickerObject = null;
     private static Context context;
-
+    private Activity activity;
     private File mediaStorageDir = null;
 
-
+    private Uri uri;
+    private String returnValue = "";
+    private String permission;
     private Bitmap.CompressFormat compressFormat = null;
     private int imageQuality = -1;
 
@@ -51,6 +64,7 @@ public class ImageHandler {
         }
         return ImagePickerObject;
     }
+
 
     public static ImageHandler getInstance() {
         if (ImagePickerObject == null) {
@@ -95,12 +109,88 @@ public class ImageHandler {
      * other file-based ContentProviders.
      *
      * @param uri The Uri to query.
-     * @author paulburke
      */
-    public String getPath(final Uri uri) {
+    public String getPath(final Uri uri, Activity activity) {
+        this.uri = uri;
+        this.activity = activity;
+        if (Build.VERSION.SDK_INT >= 23) {
+            getPathPermission(uri, activity);
+            return returnValue;
+        } else {
+            return getPathNormal(uri);
+        }
+    }
+
+    final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
+
+    private void getPathPermission(final Uri uri, final Activity activity) {
+
+        permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+        int hasWriteContactsPermission = ContextCompat.checkSelfPermission(context, permission);
+        if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
+
+            if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+                showMessageOKCancel("You need to allow access to Storage",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+//                                Intent intent = new Intent();
+//                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                                Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+//                                intent.setData(uri);
+//                                context.startActivity(intent);
+
+                                ActivityCompat.requestPermissions(activity, new String[]{permission},
+                                        REQUEST_CODE_ASK_PERMISSIONS);
+                            }
+                        });
+                return;
+            }
+            ActivityCompat.requestPermissions(activity, new String[]{permission},
+                    REQUEST_CODE_ASK_PERMISSIONS);
+            return;
+        } else {
+            this.returnValue = getPathNormal(uri);
+
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_CODE_ASK_PERMISSIONS:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission Granted
+                    this.returnValue = getPathNormal(uri);
+                } else {
+                    // Permission Denied
+                    Toast.makeText(activity, "Accessing Storage is Denied", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(activity)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+
+    public String getPathNormal(final Uri uri) {
+
 
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-
+        // final boolean isKitKat = android.os.Build.VERSION.SDK_INT >= 19;
         // DocumentProvider
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
@@ -123,7 +213,7 @@ public class ImageHandler {
                         Uri.parse("content://downloads/public_downloads"),
                         Long.valueOf(id));
 
-                return getDataColumn(contentUri, null, null);
+                return getDataColumn(contentUri, null, null, activity);
             }
             // MediaProvider
             else if (isMediaDocument(uri)) {
@@ -148,11 +238,11 @@ public class ImageHandler {
                 final String[] selectionArgs = new String[]{split[1]};
 
                 return getDataColumn(contentUri, selection,
-                        selectionArgs);
+                        selectionArgs, activity);
             } else if (isdriveDoc(uri)) {
                 Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
 
-                return getDataColumn(uri, null, null);
+                return getDataColumn(uri, null, null, activity);
 
             }
         }
@@ -163,7 +253,7 @@ public class ImageHandler {
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
-            return getDataColumn(uri, null, null);
+            return getDataColumn(uri, null, null, activity);
         }
         // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
@@ -171,6 +261,7 @@ public class ImageHandler {
         }
 
         return null;
+
     }
 
 
@@ -202,8 +293,6 @@ public class ImageHandler {
 
 
     /**
-     *
-     *
      * @param image
      * @return uri
      */
@@ -512,7 +601,7 @@ public class ImageHandler {
      * @return The value of the _data column, which is typically a file path.
      */
     private String getDataColumn(Uri uri,
-                                 String selection, String[] selectionArgs) {
+                                 String selection, String[] selectionArgs, Activity activity) {
 
         Cursor cursor = null;
         final String column = "_data";

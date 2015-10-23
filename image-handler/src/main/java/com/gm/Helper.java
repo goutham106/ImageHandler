@@ -1,10 +1,14 @@
 package com.gm;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,7 +16,29 @@ import java.util.ArrayList;
 /**
  * Created by gowtham on 21/10/15.
  */
-public class Helper {
+public class Helper extends AppCompatActivity{
+
+
+
+//    public static Boolean checkPermissions(Activity context){
+//        int result = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+//        String permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+//
+//        if (!AndroidPermission.getInstance().checkPermission(context,result))
+//            AndroidPermission.getInstance().requestPermission(context,permission,"we need this!");
+//
+////        int result1 = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE);
+////        String permission1 = Manifest.permission.READ_EXTERNAL_STORAGE;
+////
+////        if (!AndroidPermission.getInstance().checkPermission(context,result))
+////            AndroidPermission.getInstance().requestPermission(context,permission,"we need this!");
+//
+//        if (AndroidPermission.getInstance().checkPermission(context,result))
+//            return true;
+//        else
+//            return false;
+//    }
+
 
     /**
      *
