@@ -130,7 +130,7 @@ public class ImageHandler extends AppCompatActivity {
         if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED) {
 
             if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
-                showMessageOKCancel("You need to allow access to Storage",
+                showMessageOKCancel(context.getResources().getString(R.string.allowAccess),
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -167,7 +167,7 @@ public class ImageHandler extends AppCompatActivity {
                     this.returnValue = getPathNormal(uri);
                 } else {
                     // Permission Denied
-                    Toast.makeText(activity, "Accessing Storage is Denied", Toast.LENGTH_SHORT)
+                    Toast.makeText(activity, context.getResources().getString(R.string.accessDenied), Toast.LENGTH_SHORT)
                             .show();
                 }
                 break;

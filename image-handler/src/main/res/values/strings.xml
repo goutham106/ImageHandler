@@ -2,4 +2,7 @@
     <string name="app_name">Image-handler</string>
     <string name="initBitmapConfig">Please Initiate the compress format and image quality in App Config</string>
     <string name="initTempFilePath">Please Initiate the FilePath in App Config</string>
+
+    <string name="allowAccess">You need to allow access to Storage</string>
+    <string name="accessDenied">Accessing Storage is Denied</string>
 </resources>
